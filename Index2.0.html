@@ -1,0 +1,393 @@
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5D Cherokee Tree - Hummingbird Cluster Security & Jarvis Control</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap');
+    body {
+      margin: 0; padding: 1rem;
+      font-family: 'Courier Prime', monospace;
+      background: #0a1a2a;
+      color: #cce6ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      user-select: none;
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+      color: #7fffd4;
+      text-align: center;
+      font-weight: 700;
+      text-shadow: 0 0 8px #7fffd4;
+    }
+    #app {
+      max-width: 960px;
+      width: 100%;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 2.5rem);
+      grid-template-rows: repeat(8, 2.5rem);
+      gap: 0.25rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+      perspective: 800px;
+    }
+    .tile {
+      width: 2.5rem;
+      height: 2.5rem;
+      background: rgba(0, 255, 255, 0.1);
+      border: 1px solid #00ffff88;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.6s ease;
+      font-size: 1.5rem;
+      user-select: none;
+      color: #00ffffcc;
+      box-shadow: 0 0 6px #00ffff44 inset;
+      transform-style: preserve-3d;
+      position: relative;
+      overflow: visible;
+    }
+    .tile.active {
+      background: #00ffff33;
+      color: #00ffffee;
+      box-shadow: 0 0 12px #00ffffee, 0 0 20px #00ffffaa inset;
+      transform: rotateY(180deg);
+    }
+    .tile .front, .tile .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 6px;
+    }
+    .tile .back {
+      color: #ff6f61;
+      background: rgba(255, 111, 97, 0.15);
+      transform: rotateY(180deg);
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-shadow: 0 0 6px #ff6f61;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    button {
+      background: #00ffffaa;
+      border: none;
+      color: #003333;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      min-width: 120px;
+      box-shadow: 0 0 8px #00ffffaa;
+    }
+    button:hover {
+      background: #00ffffee;
+      color: #001111;
+      box-shadow: 0 0 14px #00ffffee;
+    }
+    .paperscroll {
+      background: #001a33;
+      border: 2px solid #007777;
+      box-shadow: 0 0 12px #00ffffaa inset;
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.85rem;
+      line-height: 1.3;
+      max-height: 180px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #00ffffcc;
+      margin-bottom: 1rem;
+      user-select: text;
+    }
+    .command-input {
+      width: 100%;
+      max-width: 960px;
+      padding: 0.5rem 1rem;
+      font-family: 'Courier Prime', monospace;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 2px solid #00ffffaa;
+      background: #001a33;
+      color: #00ffffcc;
+      box-shadow: 0 0 8px #00ffffaa inset;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+    .command-input::placeholder {
+      color: #004d66;
+    }
+    .jarvis-response {
+      max-width: 960px;
+      background: #002233;
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.9rem;
+      color: #7fffd4;
+      box-shadow: 0 0 12px #7fffd4aa inset;
+      min-height: 3rem;
+      white-space: pre-wrap;
+      user-select: text;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main" aria-label="5D Cherokee Tree Hummingbird Cluster Security Interface">
+    <h1>5D Cherokee Tree - Hummingbird Cluster Security & Jarvis Control</h1>
+
+    <div class="grid" role="grid" aria-label="Origami tree node grid with command interface">
+      <div v-for="(tile, idx) in tiles" :key="idx" class="tile" :class="{active: tile.active}" @click="toggleTile(idx)" :aria-pressed="tile.active.toString()" role="button" tabindex="0" @keydown.enter.space.prevent="toggleTile(idx)">
+        <div class="front" aria-hidden="true">{{ tile.symbol }}</div>
+        <div class="back" aria-hidden="true">{{ tile.spinSymbol }}</div>
+      </div>
+    </div>
+
+    <div class="controls" role="region" aria-label="Control buttons">
+      <button @click="resetGrid" aria-label="Reset grid to initial state">Reset Grid</button>
+      <button @click="foldAll" aria-label="Fold all nodes">Fold All</button>
+      <button @click="unfoldAll" aria-label="Unfold all nodes">Unfold All</button>
+      <button @click="startSonification" aria-label="Start sonification with hummingbird cluster">Start Sonification</button>
+      <button @click="stopSonification" aria-label="Stop sonification">Stop Sonification</button>
+    </div>
+
+    <input
+      v-model="command"
+      @keydown.enter.prevent="processCommand"
+      class="command-input"
+      type="text"
+      placeholder="Jarvis Command: e.g. 'fold 5', 'unfold 10', 'spin 3', 'sonify start', 'sonify stop'"
+      aria-label="Jarvis command input"
+      autocomplete="off"
+      spellcheck="false"
+    />
+
+    <div class="jarvis-response" role="log" aria-live="polite" aria-atomic="true">
+      {{ jarvisResponse }}
+    </div>
+
+    <pre class="paperscroll" aria-label="Generated paperscroll.py code">
+{{ paperscrollCode }}
+    </pre>
+  </div>
+
+  <script>
+    const { createApp, reactive, computed, ref, watch } = Vue;
+
+    createApp({
+      setup() {
+        // Cherokee Unicode block subset for symbols
+        const cherokeeSymbols = [
+          'Ꭰ','Ꭱ','Ꭲ','Ꭳ','Ꭴ','Ꭵ','Ꭶ','Ꭷ','Ꭸ','Ꭹ','Ꭺ','Ꭻ',
+          'Ꭼ','Ꭽ','Ꭾ','Ꭿ','Ꮀ','Ꮁ','Ꮂ','Ꮃ','Ꮄ','Ꮅ','Ꮆ','Ꮇ',
+          'Ꮈ','Ꮉ','Ꮊ','Ꮋ','Ꮌ','Ꮍ','Ꮎ','Ꮏ','Ꮐ','Ꮑ','Ꮒ','Ꮓ',
+          'Ꮔ','Ꮕ','Ꮖ','Ꮗ','Ꮘ','Ꮙ','Ꮚ','Ꮛ','Ꮜ','Ꮝ','Ꮞ','Ꮟ'
+        ];
+
+        // Spin symbols for back side (rotating through a small set)
+        const spinSymbols = ['⟳','⟲','⮌','⮋','⭮'];
+
+        // Initialize 12x8 grid (96 tiles)
+        const tiles = reactive(Array(96).fill(null).map((_, i) => ({
+          active: false,
+          symbol: cherokeeSymbols[i % cherokeeSymbols.length],
+          spinSymbol: spinSymbols[i % spinSymbols.length],
+          spinIndex: 0
+        })));
+
+        // Toggle tile active state
+        function toggleTile(idx) {
+          tiles[idx].active = !tiles[idx].active;
+          playNoteForTile(idx);
+        }
+
+        // Reset grid to all inactive
+        function resetGrid() {
+          tiles.forEach(t => {
+            t.active = false;
+            t.spinIndex = 0;
+          });
+          jarvisResponse.value = "Grid reset.";
+          stopSonification();
+        }
+
+        // Fold all nodes (activate all)
+        function foldAll() {
+          tiles.forEach(t => t.active = true);
+          jarvisResponse.value = "All nodes folded.";
+          playSonificationSequence();
+        }
+
+        // Unfold all nodes (deactivate all)
+        function unfoldAll() {
+          tiles.forEach(t => t.active = false);
+          jarvisResponse.value = "All nodes unfolded.";
+          stopSonification();
+        }
+
+        // Paperscroll.py code generation
+        const paperscrollCode = computed(() => {
+          let code = `# paperscroll.py - Origami Folding Tree Representation\n\n`;
+          code += `tree_nodes = [\n`;
+          tiles.forEach((tile, i) => {
+            const state = tile.active ? 'folded' : 'unfolded';
+            code += `  {"id": ${i}, "symbol": "${tile.symbol}", "state": "${state}"},\n`;
+          });
+          code += `]\n\n`;
+          code += `def display_tree():\n`;
+          code += `  for node in tree_nodes:\n`;
+          code += `    print(f"Node {node['id']} ({node['symbol']}): {node['state']}")\n\n`;
+          code += `if __name__ == "__main__":\n`;
+          code += `  display_tree()\n`;
+          return code;
+        });
+
+        // Jarvis conversational command input and response
+        const command = ref('');
+        const jarvisResponse = ref('Awaiting your command...');
+
+        // Tone.js synth for sonification
+        const synth = new Tone.Synth({
+          oscillator: { type: 'triangle' },
+          envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
+        }).toDestination();
+
+        // Notes mapped to tiles (12 notes repeating)
+        const notes = ['C4','D4','E4','G4','A4','B4','C5','D5','E5','G5','A5','B5'];
+
+        // Play note for a tile index
+        function playNoteForTile(idx) {
+          if (!Tone.context.state === 'running') Tone.context.resume();
+          const note = notes[idx % notes.length];
+          synth.triggerAttackRelease(note, '8n');
+        }
+
+        // Sonification interval and state
+        let sonifyInterval = null;
+
+        // Sonify active tiles in sequence with hummingbird cluster effect
+        function playSonificationSequence() {
+          if (sonifyInterval) return; // already playing
+          let i = 0;
+          sonifyInterval = setInterval(() => {
+            if (i >= tiles.length) i = 0;
+            if (tiles[i].active) {
+              // Spin symbol advance
+              tiles[i].spinIndex = (tiles[i].spinIndex + 1) % spinSymbols.length;
+              tiles[i].spinSymbol = spinSymbols[tiles[i].spinIndex];
+              playNoteForTile(i);
+            }
+            i++;
+          }, 150);
+          jarvisResponse.value = "Sonification started: hummingbird cluster active.";
+        }
+
+        // Stop sonification
+        function stopSonification() {
+          if (sonifyInterval) {
+            clearInterval(sonifyInterval);
+            sonifyInterval = null;
+            jarvisResponse.value = "Sonification stopped.";
+          }
+        }
+
+        // Process Jarvis style commands
+        function processCommand() {
+          const cmd = command.value.trim().toLowerCase();
+          if (!cmd) return;
+          let response = "Command not recognized. Try: fold <n>, unfold <n>, spin <n>, sonify start/stop, reset.";
+
+          const foldMatch = cmd.match(/^fold\s+(\d+)$/);
+          const unfoldMatch = cmd.match(/^unfold\s+(\d+)$/);
+          const spinMatch = cmd.match(/^spin\s+(\d+)$/);
+          const sonifyStart = cmd === 'sonify start' || cmd === 'sonification start';
+          const sonifyStop = cmd === 'sonify stop' || cmd === 'sonification stop';
+          const resetCmd = cmd === 'reset' || cmd === 'clear';
+
+          if (foldMatch) {
+            const idx = parseInt(foldMatch[1]);
+            if (idx >= 0 && idx < tiles.length) {
+              tiles[idx].active = true;
+              response = `Node ${idx} folded.`;
+              playNoteForTile(idx);
+            } else {
+              response = `Index ${idx} out of range (0-${tiles.length-1}).`;
+            }
+          } else if (unfoldMatch) {
+            const idx = parseInt(unfoldMatch[1]);
+            if (idx >= 0 && idx < tiles.length) {
+              tiles[idx].active = false;
+              response = `Node ${idx} unfolded.`;
+            } else {
+              response = `Index ${idx} out of range (0-${tiles.length-1}).`;
+            }
+          } else if (spinMatch) {
+            const idx = parseInt(spinMatch[1]);
+            if (idx >= 0 && idx < tiles.length) {
+              tiles[idx].spinIndex = (tiles[idx].spinIndex + 1) % spinSymbols.length;
+              tiles[idx].spinSymbol = spinSymbols[tiles[idx].spinIndex];
+              response = `Node ${idx} spin symbol rotated.`;
+              playNoteForTile(idx);
+            } else {
+              response = `Index ${idx} out of range (0-${tiles.length-1}).`;
+            }
+          } else if (sonifyStart) {
+            playSonificationSequence();
+            response = "Sonification started.";
+          } else if (sonifyStop) {
+            stopSonification();
+            response = "Sonification stopped.";
+          } else if (resetCmd) {
+            resetGrid();
+            response = "Grid reset.";
+          }
+
+          jarvisResponse.value = response;
+          command.value = '';
+        }
+
+        // Accessibility: focus on input on load
+        setTimeout(() => {
+          const input = document.querySelector('.command-input');
+          if(input) input.focus();
+        }, 300);
+
+        return {
+          tiles,
+          toggleTile,
+          resetGrid,
+          foldAll,
+          unfoldAll,
+          paperscrollCode,
+          command,
+          jarvisResponse,
+          processCommand,
+          startSonification: playSonificationSequence,
+          stopSonification
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
